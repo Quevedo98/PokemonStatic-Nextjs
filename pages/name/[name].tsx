@@ -2,7 +2,7 @@ import { NextPage, GetStaticProps, GetStaticPaths }from 'next';
 
 import { Button, Card, Grid, Group, Image, SimpleGrid, Title } from "@mantine/core";
 
-import { useEffect,useState } from "react";
+import { useState } from "react";
 import { pokeApi } from "../../api";
 import { Layout } from "../../components/layouts";
 import { Pokemon, PokemonListResponse } from '../../interfaces'
@@ -80,7 +80,8 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
         paths: pokemonNames.map(name => ({
             params: { name }
         })),
-        fallback: false
+        // fallback: false
+        fallback: 'blocking'
     }
 
   }
@@ -89,10 +90,22 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
     
     const { name } = params as {name: string};
 
+    const pokemonRequest = await getPokemonInfo(name);
+
+    if(!pokemonRequest){
+        return {
+            redirect: {
+                destination: '/',
+                permanent: false,
+            }
+        }
+    }
+
     return {
         props:{
-            pokemon: await getPokemonInfo( name ),
-        }
+            pokemon: pokemonRequest
+        },
+        revalidate: 86400,
     }
   }
 
